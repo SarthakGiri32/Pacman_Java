@@ -1,6 +1,11 @@
 Date: 21 Aug 2026
+- Video Timestamp: 00:35:23
+- Added the basic layout for the game window
+- Started working on the main game loop
+
+Date: 20 Aug 2026
 - Video Timestamp: 00:14:30
-    - Created a Java Project to follow along with the YouTube tutorial
-    - Started working on two classes:
-        - App
-        - PacMan
+- Created a Java Project to follow along with the YouTube tutorial
+- Started working on two classes:
+    - App
+    - PacMan
