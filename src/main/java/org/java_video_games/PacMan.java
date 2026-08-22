@@ -6,13 +6,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.Random;
 import java.util.HashSet;
 import java.util.Objects;
 
 public class PacMan extends JPanel implements ActionListener, KeyListener {
-    static class Block {
+    public class Block {
         int x, y, width, height;
         Image image;
+        char direction = 'U'; // Valid directions: 'U', 'D', 'L', 'R'
+        int velocityX = 0, velocityY = 0; // default behavior for the pacman is to remain static and not move
 
         /*
         for restarting the game, need to save the starting positions of the ghost characters and
@@ -28,6 +31,52 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             this.height = height;
             this.startX = x;
             this.startY = y;
+        }
+
+        // update direction and velocity based on the arrow key pressed
+        void updateDirection(char direction) {
+            char prevDirection = this.direction;
+            this.direction = direction;
+            updateVelocity();
+
+            /*
+            looping through the 'walls' hashset to ensure Pacman (or the ghosts) does not change directions
+            if it is hitting a wall. The current (updated) direction of the character is changed to the previous
+            direction, along with re-updating the velocity
+             */
+            this.x += this.velocityX;
+            this.y += this.velocityY;
+            for (Block wall: walls) {
+                if (collision(this, wall)) {
+                    this.x -= this.velocityX;
+                    this.y -= this.velocityY;
+                    this.direction = prevDirection;
+                    updateVelocity();
+                }
+            }
+        }
+
+        // update velocity based on the direction
+        void updateVelocity() {
+            // we are moving by 8px in every frame
+            switch (this.direction) {
+                case 'U' -> {
+                    this.velocityX = 0;
+                    this.velocityY = - tileSize / 4;
+                }
+                case 'D' -> {
+                    this.velocityX = 0;
+                    this.velocityY = tileSize / 4;
+                }
+                case 'L' -> {
+                    this.velocityX = - tileSize / 4;
+                    this.velocityY = 0;
+                }
+                case 'R' -> {
+                    this.velocityX = tileSize / 4;
+                    this.velocityY = 0;
+                }
+            }
         }
     }
 
@@ -88,6 +137,15 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     PacMan() {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
         setBackground(Color.BLACK);
+
+        /*
+        No need to create a separate key listener object, since the 'PacMan' class is implementing 'KeyListener'.
+        The functions implemented by the 'PacMan' class from 'KeyListener' interface will be used by calling the
+        'addKeyListener' function
+         */
+        addKeyListener(this);
+        // To make sure that the 'PacMan' JPanel listens to the key presses, we are calling the 'setFocusable' function
+        setFocusable(true);
 
         // load images: get the image from the corresponding image icon
         wallImage = new ImageIcon(Objects.requireNonNull(getClass().getResource(
@@ -203,8 +261,49 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
     }
 
+    // the position of the characters is changed based on the velocity and direction of the velocity
+    public void move() {
+        pacman.x += pacman.velocityX;
+        pacman.y += pacman.velocityY;
+
+        // checking wall collisions
+        for (Block wall: walls) {
+            /*
+            If pacman collides with a wall, the movement made to try to cross into the wall's rectangle
+            will be reversed, and in that frame pacman stop before the wall.
+             */
+            if (collision(pacman, wall)) {
+                pacman.x -= pacman.velocityX;
+                pacman.y -= pacman.velocityY;
+                break; // once a wall has been encountered, we don't to check for any other wall collisions
+            }
+        }
+    }
+
+    /**
+     * This function will detect collision between all characters inside the game.
+     * A specific formula will be used to detect the collision between two rectangles on the screen.
+     * Every food, ghost, wall, empty space - even Pacman (whose image is circular) - is a rectangle
+     * @param a the first 'Block' character object
+     * @param b the second 'Block' character object
+     * @return the boolean result of the collision detection between the two 'Block' characters
+     */
+    public boolean collision(Block a, Block b) {
+        // the collision detection formula:
+        return a.x < b.x + b.width &&
+                a.x + a.width > b.x &&
+                a.y < b.y + b.height &&
+                a.y + a.height > b.y;
+    }
+
+    /**
+     * the positions of all movable characters is updated before the screen is repainted for every frame in
+     * the game loop
+     * @param e the event to be processed
+     */
     @Override
     public void actionPerformed(ActionEvent e) {
+        move(); // update the character positions
         repaint(); // will call the 'paintComponent' method defined above
     }
 
@@ -227,11 +326,31 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     public void keyPressed(KeyEvent e) {}
 
     /**
-     * We will use this function to move 'Pacman' in the game window
+     * We will use this function to update the direction, velocity and directional image
+     * of 'Pacman' in the game window
      * @param e the event to be processed
      */
     @Override
     public void keyReleased(KeyEvent e) {
-        System.out.println("KeyEvent: " + e.getKeyCode());
+//        System.out.println("KeyEvent: " + e.getKeyCode());
+        // the key codes for the arrow keys are between 37 and 40 (inclusive)
+
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_UP -> pacman.updateDirection('U');
+            case KeyEvent.VK_DOWN -> pacman.updateDirection('D');
+            case KeyEvent.VK_LEFT -> pacman.updateDirection('L');
+            case KeyEvent.VK_RIGHT -> pacman.updateDirection('R');
+        }
+
+        switch (pacman.direction) {
+            case 'U' -> pacman.image = pacmanUpImage;
+            case 'D' -> pacman.image = pacmanDownImage;
+            case 'L' -> pacman.image = pacmanLeftImage;
+            case 'R' -> pacman.image = pacmanRightImage;
+        }
+        /*
+        The pacman image change is not being done with the arrow-key press, because an arrow-key press does not result
+        in a direction change if the arrow-key direction is blocked by a wall.
+         */
     }
 }
