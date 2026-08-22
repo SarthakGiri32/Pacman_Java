@@ -10,6 +10,8 @@ public class App {
         PacMan pacManGameJPanel = new PacMan();
         gameWIndowJFrame.add(pacManGameJPanel);
         gameWIndowJFrame.pack(); // to "fill out" the JPanel inside the JFrame
+        // the pacman JPanel will now get the keyboard input focus
+        pacManGameJPanel.requestFocus();
         // as a coding convention, the JFrame should be made visible after all components have been added
         gameWIndowJFrame.setVisible(true);
     }
