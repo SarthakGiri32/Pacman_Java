@@ -6,9 +6,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.Random;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Random;
 
 public class PacMan extends JPanel implements ActionListener, KeyListener {
     public class Block {
@@ -46,7 +46,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
              */
             this.x += this.velocityX;
             this.y += this.velocityY;
-            for (Block wall: walls) {
+            for (Block wall : walls) {
                 if (collision(this, wall)) {
                     this.x -= this.velocityX;
                     this.y -= this.velocityY;
@@ -62,14 +62,14 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             switch (this.direction) {
                 case 'U' -> {
                     this.velocityX = 0;
-                    this.velocityY = - tileSize / 4;
+                    this.velocityY = -tileSize / 4;
                 }
                 case 'D' -> {
                     this.velocityX = 0;
                     this.velocityY = tileSize / 4;
                 }
                 case 'L' -> {
-                    this.velocityX = - tileSize / 4;
+                    this.velocityX = -tileSize / 4;
                     this.velocityY = 0;
                 }
                 case 'R' -> {
@@ -134,6 +134,10 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
      */
     Timer gameLoopTimer;
 
+    char[] directions = {'U', 'D', 'L', 'R'}; // up, down, left and right
+    Random random = new Random();
+    // for each ghost, we are randomly selecting the direction
+
     PacMan() {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
         setBackground(Color.BLACK);
@@ -170,6 +174,13 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
         // loading the tile map image objects in the object hash sets
         loadMap();
+
+        for (Block ghost : ghosts) {
+            // a new direction is selected randomly from the 'directions' array
+            char newDirection = directions[random.nextInt(4)];
+            // we update each ghost's direction and velocity based on the new random direction
+            ghost.updateDirection(newDirection);
+        }
 
         /*
         How long it takes to start timer - or - milliseconds spent between frames:
@@ -247,16 +258,16 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     public void draw(Graphics g) {
         g.drawImage(pacman.image, pacman.x, pacman.y, pacman.width, pacman.height, null);
 
-        for (Block ghost: ghosts) {
+        for (Block ghost : ghosts) {
             g.drawImage(ghost.image, ghost.x, ghost.y, ghost.width, ghost.height, null);
         }
 
-        for (Block wall: walls) {
+        for (Block wall : walls) {
             g.drawImage(wall.image, wall.x, wall.y, wall.width, wall.height, null);
         }
 
         g.setColor(Color.WHITE); // setting the color for 'food' image filled rectangles of size 4px by 4px
-        for (Block food: foods) {
+        for (Block food : foods) {
             g.fillRect(food.x, food.y, food.width, food.height); // since the 'food' image is just an empty rectangle
         }
     }
@@ -267,7 +278,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         pacman.y += pacman.velocityY;
 
         // checking wall collisions
-        for (Block wall: walls) {
+        for (Block wall : walls) {
             /*
             If pacman collides with a wall, the movement made to try to cross into the wall's rectangle
             will be reversed, and in that frame pacman stop before the wall.
@@ -278,12 +289,45 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                 break; // once a wall has been encountered, we don't to check for any other wall collisions
             }
         }
+
+        /*
+        if pacman encounters a boundary wall of the game window with no 'wall' block object, it will teleport to the
+        opposite side of the window on the (in the default tutorial tile map) same row
+         */
+        if (pacman.x <= 0) { // crossing the left border beyond the game window
+            pacman.x = boardWidth - pacman.width;
+        } else if (pacman.x + pacman.width >= boardWidth) { // crossing the right border beyond the window
+            pacman.x = 0;
+        }
+
+        // check ghost collisions
+        for (Block ghost : ghosts) {
+            ghost.x += ghost.velocityX;
+            ghost.y += ghost.velocityY;
+            for (Block wall : walls) {
+                if (collision(ghost, wall)) {
+                    ghost.x -= ghost.velocityX;
+                    ghost.y -= ghost.velocityY;
+                    // a ghost should change directions immediately on colliding with a wall
+                    char newDirection = directions[random.nextInt(4)];
+                    ghost.updateDirection(newDirection);
+                }
+            }
+            /*
+            This if case is only valid for the default tutorial tile map. if the ghost is moving left or right on the
+            9th row, then either up or down will be selected as the direction for the ghost randomly
+             */
+            if (ghost.y == tileSize * 9 && ghost.direction != 'U' && ghost.direction != 'D') {
+                ghost.updateDirection(directions[random.nextInt(2)]);
+            }
+        }
     }
 
     /**
      * This function will detect collision between all characters inside the game.
      * A specific formula will be used to detect the collision between two rectangles on the screen.
      * Every food, ghost, wall, empty space - even Pacman (whose image is circular) - is a rectangle
+     *
      * @param a the first 'Block' character object
      * @param b the second 'Block' character object
      * @return the boolean result of the collision detection between the two 'Block' characters
@@ -299,6 +343,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     /**
      * the positions of all movable characters is updated before the screen is repainted for every frame in
      * the game loop
+     *
      * @param e the event to be processed
      */
     @Override
@@ -311,23 +356,28 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
      * Will listen and process the values from a keyboard key with a character (alphanumeric
      * or special characters). (We are only using arrow keys to move the 'Pacman' around,
      * we don't need the values from any character keys)
+     *
      * @param e the event to be processed
      */
     @Override
-    public void keyTyped(KeyEvent e) {}
+    public void keyTyped(KeyEvent e) {
+    }
 
     /**
      * Will listen and process the action for a key being pressed and held in the pressed position.
      * (We are not interested in listening to a key press. The main change in the position of 'Pacman'
      * will happen when an arrow key is released after being pressed)
+     *
      * @param e the event to be processed
      */
     @Override
-    public void keyPressed(KeyEvent e) {}
+    public void keyPressed(KeyEvent e) {
+    }
 
     /**
      * We will use this function to update the direction, velocity and directional image
      * of 'Pacman' in the game window
+     *
      * @param e the event to be processed
      */
     @Override
