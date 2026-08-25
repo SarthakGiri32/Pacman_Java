@@ -1,10 +1,14 @@
+Date: 25 Aug 2026
+- Video Timestamp: 00:56:00
+- Added movement for ghosts
+- Added empty game window collision mechanic for pacman and all ghost characters
+- Added wall block collision mechanic for all ghost characters
+
 Date: 22 Aug 2026
 - Video Timestamp: 00:50:17
 - Added collision detection logic for all rectangular character blocks in the game
 - Added movement for pacman
-- Added collision mechanic between:
-    - pacman and wall blocks
-    - ghosts and wall blocks
+- Added collision mechanic between pacman and wall blocks
 
 Date: 21 Aug 2026
 - Video Timestamp: 00:35:23
