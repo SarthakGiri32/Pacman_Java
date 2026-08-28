@@ -4,6 +4,9 @@ This repo contains the code written while following this YouTube tutorial for cr
 Programming Language:  
 - [Code Pacman in Java](https://youtu.be/lB_J-VNMVpE) from [Kenny Yip Coding](https://www.youtube.com/@KennyYipCoding)  
 
+**Please install and setup [Apache Maven](https://maven.apache.org/install.html)
+on your PC before cloning this repo**
+
 ## Game Window Dimensions:  
 - The window has been divided into tiles, which is considered the smallest unit in the window screen for the game  
 - Each tile has a width of 32px and a height of 32px  
@@ -46,4 +49,4 @@ To get the image files for pacman, ghosts, walls, etc., follow the instructions 
 command:  
    `git clone https://github.com/ImKennyYip/pacman-java.git`  
 4. Copy all files ending with `.png` and paste inside the 
-[`src/main/resources/Game_Images`](src/main/resources/Game_Images) folder of this repo  
+[`src/main/resources/Game_Images`](src/main/resources/Game_Images) folder of this repo
