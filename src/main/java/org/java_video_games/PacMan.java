@@ -22,6 +22,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         the pacman character
          */
         int startX, startY;
+        Image startImage;
 
         Block(Image image, int x, int y, int width, int height) {
             this.image = image;
@@ -31,6 +32,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             this.height = height;
             this.startX = x;
             this.startY = y;
+            this.startImage = image;
         }
 
         // update direction and velocity based on the arrow key pressed
@@ -77,6 +79,13 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                     this.velocityY = 0;
                 }
             }
+        }
+
+        // resets the x and y positions of pacman and ghosts after a collision
+        void reset() {
+            this.x = this.startX;
+            this.y = this.startY;
+            this.image = this.startImage;
         }
     }
 
@@ -137,6 +146,15 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     char[] directions = {'U', 'D', 'L', 'R'}; // up, down, left and right
     Random random = new Random();
     // for each ghost, we are randomly selecting the direction
+
+    // variables to track interactions between pacman, the ghosts and the food
+    int score = 0; // tracks the food score of pacman
+    int lives = 3; // the default lives of pacman
+    boolean gameOver = false;
+    /*
+    Pacman has 3 lives (by default). If pacman collides with a ghost, it will lose 1 life. If pacman loses all 3 lives,
+    'gameOver' is set to true. If 'gameOver' is true, the player is unable to move pacman.
+     */
 
     PacMan() {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
@@ -270,6 +288,14 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         for (Block food : foods) {
             g.fillRect(food.x, food.y, food.width, food.height); // since the 'food' image is just an empty rectangle
         }
+
+        // score/'game over' display
+        g.setFont(new Font("Arial", Font.PLAIN, 18));
+        if (gameOver) {
+            g.drawString("Game Over! Final Score: " + score + " (Press 'Space' to play again)", tileSize / 2, tileSize / 2);
+        } else {
+            g.drawString("x" + lives + " Score: " + score, tileSize / 2, tileSize / 2);
+        }
     }
 
     // the position of the characters is changed based on the velocity and direction of the velocity
@@ -313,6 +339,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                     ghost.updateDirection(newDirection);
                 }
             }
+
             /*
             This if case is only valid for the default tutorial tile map. if the ghost is moving left or right on the
             9th row, then either up or down will be selected as the direction for the ghost randomly
@@ -320,6 +347,45 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             if (ghost.y == tileSize * 9 && ghost.direction != 'U' && ghost.direction != 'D') {
                 ghost.updateDirection(directions[random.nextInt(2)]);
             }
+
+            /*
+            collision will be checked between pacman and ghosts, and their positions will be reset to their starting
+            positions
+             */
+            if (collision(ghost, pacman)) {
+                lives -= 1;
+                if (lives == 0) {
+                    // we need to stop moving the pacman and ghosts if lives == 0
+                    gameOver = true;
+                    return;
+                }
+                resetPositions();
+            }
+        }
+
+        // check food collisions
+        /*
+        Everytime pacman 'eats' a food block, the block should be removed from the hashset, since the food has been
+        'consumed' by pacman and doesn't exist anymore. Also, 10 points will be added to the 'score' variables for
+        every food item consumed by pacman.
+         */
+        Block foodEaten = null;
+        for (Block food : foods) {
+            if (collision(pacman, food)) {
+                foodEaten = food; // pacman will 'eat' the food
+                score += 10;
+                break;
+            }
+        }
+        foods.remove(foodEaten);
+
+        /*
+        if all food has been consumed by pacman, we progress to the next level (in the default tutorial, the next
+        level's tile map is the same as the 1st level's)
+         */
+        if (foods.isEmpty()) {
+            loadMap();
+            resetPositions();
         }
     }
 
@@ -340,6 +406,27 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                 a.y + a.height > b.y;
     }
 
+    public void resetPositions() {
+        pacman.reset();
+
+        /*
+        stop the existing movement of pacman; essentially, wait for the user input to move pacman after its position
+        has been reset
+         */
+        pacman.velocityX = 0;
+        pacman.velocityY = 0;
+
+        /*
+        do the same position reset for all ghosts, and set a new random movement direction and velocity for the ghosts
+        from their starting positions
+         */
+        for (Block ghost : ghosts) {
+            ghost.reset();
+            char directionAfterReset = directions[random.nextInt(4)];
+            ghost.updateDirection(directionAfterReset);
+        }
+    }
+
     /**
      * the positions of all movable characters is updated before the screen is repainted for every frame in
      * the game loop
@@ -350,6 +437,11 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     public void actionPerformed(ActionEvent e) {
         move(); // update the character positions
         repaint(); // will call the 'paintComponent' method defined above
+
+        // if 'gameOver' is true, we need to stop the game loop (stop moving and drawing for all characters)
+        if (gameOver) {
+            gameLoopTimer.stop();
+        }
     }
 
     /**
@@ -382,8 +474,18 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
      */
     @Override
     public void keyReleased(KeyEvent e) {
-//        System.out.println("KeyEvent: " + e.getKeyCode());
         // the key codes for the arrow keys are between 37 and 40 (inclusive)
+//        System.out.println(e.getExtendedKeyCode());
+
+        if (gameOver && e.getKeyCode() == KeyEvent.VK_SPACE) {
+            loadMap(); // reload the default tile map (along-with all 'eaten' food tiles)
+            resetPositions(); // resets the positions of ghosts and pacman
+            lives = 3;
+            score = 0;
+            gameOver = false;
+            gameLoopTimer.start();
+            return; // to break out of this function after game restart, and skip the switch blocks below
+        }
 
         switch (e.getKeyCode()) {
             case KeyEvent.VK_UP -> pacman.updateDirection('U');
