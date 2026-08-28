@@ -1,8 +1,22 @@
+Date: 28 Aug 2026
+- Video Timestamp: 01:08:00
+- Completed the video tutorial
+    - Added interaction mechanic between pacman and ghosts
+        - Added a 'lives' counter for pacman:
+            - It is decremented after every collision between pacman and a ghost
+            - The positions of pacman and the ghosts are reset immediately after a collision
+            - A 'game over' mechanic has been added, where after 3 lives are lost, the game stops running, and can be
+            restarted by pressing the 'space' key on the keyboard, with the 3 lives restored and the score reset to 0
+    - Added a 'leveling up' mechanic, where the a new level is reached after pacman has consumed all the food pellets in
+    the game
+- Updated README.md with a list of future main feature and side feature update plans
+
 Date: 25 Aug 2026
 - Video Timestamp: 00:56:00
 - Added movement for ghosts
 - Added empty game window collision mechanic for pacman and all ghost characters
 - Added wall block collision mechanic for all ghost characters
+- implement a left/right looping for the 9th row of the map, based on the tutorial tilemap
 
 Date: 22 Aug 2026
 - Video Timestamp: 00:50:17
