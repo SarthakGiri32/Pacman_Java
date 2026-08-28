@@ -35,4 +35,15 @@ Programming Language:
 - Add the 'cherry' sprites as a feature of your own
 - Implement an advanced movement mechanic for the ghosts so that they actually try to follow pacman around the map
 - You can create your own tilemap, and even add new tilemaps for higher levels reached by consuming all food pellets
-  in a lower level's map
+  in a lower level's map  
+
+## Adding Game Graphics Images  
+
+To get the image files for pacman, ghosts, walls, etc., follow the instructions below:  
+1. Go to this [link](https://github.com/ImKennyYip/pacman-java) to take a look at the tutorial's GitHub repo  
+2. Click on the green 'Code' button and copy the HTTPS link in the 'Clone' section  
+3. Open the command prompt on your PC, navigate to the directory where you want to clone the repo and execute this
+command:  
+   `git clone https://github.com/ImKennyYip/pacman-java.git`  
+4. Copy all files ending with `.png` and paste inside the 
+[`src/main/resources/Game_Images`](src/main/resources/Game_Images) folder of this repo  
