@@ -26,6 +26,7 @@ on your PC before cloning this repo**
   - [x] If the pacman goes beyond the up/down/left/right border of the game window, it should loop around to the 
         opposite side and keep moving in the same direction
   - [x] implement a left/right looping for the 9th row of the map, based on the tutorial tilemap
+  - [x] Also added this feature for all ghost characters
 - [ ] A pause/start feature, based on pressing a key on the keyboard to start/stop the game
 - [ ] A high-score tracker, which keeps a track of the highest score ever achieved in the game across all game 
       restarts  

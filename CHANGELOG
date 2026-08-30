@@ -1,3 +1,8 @@
+Date: 30 Aug 2026
+- Implemented the beyond boundary wall movement loop around feature for both pacman and ghosts
+- Changed the movement mechanic for pacman to move when a arrow key is pressed, and to stop moving when the pressed
+arrow key is released
+
 Date: 29 Aug 2026
 - Removed the image files from the repo, and added steps to copy those files from the tutorial repo
 - Added a placeholder file in the src/main/resources/Game_Images folder to maintain a standard maven project
