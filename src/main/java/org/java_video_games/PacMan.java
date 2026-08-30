@@ -36,7 +36,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
 
         // update direction and velocity based on the arrow key pressed
-        void updateDirection(char direction) {
+        protected void updateDirection(char direction) {
             char prevDirection = this.direction;
             this.direction = direction;
             updateVelocity();
@@ -59,7 +59,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
 
         // update velocity based on the direction
-        void updateVelocity() {
+        private void updateVelocity() {
             // we are moving by 8px in every frame
             switch (this.direction) {
                 case 'U' -> {
@@ -82,7 +82,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
 
         // resets the x and y positions of pacman and ghosts after a collision
-        void reset() {
+        protected void reset() {
             this.x = this.startX;
             this.y = this.startY;
             this.image = this.startImage;
@@ -134,29 +134,29 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             "XXXXXXXXXXXXXXXXXXX"
     };
 
-    HashSet<Block> walls, foods, ghosts; // will be used for calculating and dealing with collisions
-    Block pacman;
+    private HashSet<Block> walls, foods, ghosts; // will be used for calculating and dealing with collisions
+    private Block pacman;
 
     /*
      * Create the game loop timer object to constantly re-paint the game window for every movement of
      * every moveable character on screen
      */
-    Timer gameLoopTimer;
+    private final Timer gameLoopTimer;
 
-    char[] directions = {'U', 'D', 'L', 'R'}; // up, down, left and right
-    Random random = new Random();
+    private final char[] directions = {'U', 'D', 'L', 'R'}; // up, down, left and right
+    private final Random random = new Random();
     // for each ghost, we are randomly selecting the direction
 
     // variables to track interactions between pacman, the ghosts and the food
-    int score = 0; // tracks the food score of pacman
-    int lives = 3; // the default lives of pacman
-    boolean gameOver = false;
+    private int score = 0; // tracks the food score of pacman
+    private int lives = 3; // the default lives of pacman
+    private boolean gameOver = false;
     /*
     Pacman has 3 lives (by default). If pacman collides with a ghost, it will lose 1 life. If pacman loses all 3 lives,
     'gameOver' is set to true. If 'gameOver' is true, the player is unable to move pacman.
      */
 
-    PacMan() {
+    protected PacMan() {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
         setBackground(Color.BLACK);
 
@@ -209,7 +209,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         gameLoopTimer.start();
     }
 
-    public void loadMap() {
+    private void loadMap() {
         // initializing the hashsets
         walls = new HashSet<>();
         foods = new HashSet<>();
@@ -273,7 +273,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     }
 
     // creating the graphics for the game window using the 32px by 32px images and the tile map
-    public void draw(Graphics g) {
+    private void draw(Graphics g) {
         g.drawImage(pacman.image, pacman.x, pacman.y, pacman.width, pacman.height, null);
 
         for (Block ghost : ghosts) {
@@ -292,14 +292,15 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         // score/'game over' display
         g.setFont(new Font("Arial", Font.PLAIN, 18));
         if (gameOver) {
-            g.drawString("Game Over! Final Score: " + score + " (Press 'Space' to play again)", tileSize / 2, tileSize / 2);
+            g.drawString("Game Over! Final Score: " + score + " (Press 'Space' to play again)",
+                    tileSize / 2, tileSize / 2);
         } else {
             g.drawString("x" + lives + " Score: " + score, tileSize / 2, tileSize / 2);
         }
     }
 
     // the position of the characters is changed based on the velocity and direction of the velocity
-    public void move() {
+    private void move() {
         pacman.x += pacman.velocityX;
         pacman.y += pacman.velocityY;
 
@@ -320,11 +321,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         if pacman encounters a boundary wall of the game window with no 'wall' block object, it will teleport to the
         opposite side of the window on the (in the default tutorial tile map) same row
          */
-        if (pacman.x <= 0) { // crossing the left border beyond the game window
-            pacman.x = boardWidth - pacman.width;
-        } else if (pacman.x + pacman.width >= boardWidth) { // crossing the right border beyond the window
-            pacman.x = 0;
-        }
+        beyondBoundaryMoveLoop(pacman);
 
         // check ghost collisions
         for (Block ghost : ghosts) {
@@ -347,6 +344,8 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             if (ghost.y == tileSize * 9 && ghost.direction != 'U' && ghost.direction != 'D') {
                 ghost.updateDirection(directions[random.nextInt(2)]);
             }
+
+            beyondBoundaryMoveLoop(ghost);
 
             /*
             collision will be checked between pacman and ghosts, and their positions will be reset to their starting
@@ -389,6 +388,19 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
     }
 
+    // handles beyond game window boundary movement for pacman and ghosts
+    private void beyondBoundaryMoveLoop(Block movableCharacter) {
+        if (movableCharacter.x <= 0) { // crossing the left border beyond the game window
+            movableCharacter.x = boardWidth - movableCharacter.width;
+        } else if (movableCharacter.x + movableCharacter.width >= boardWidth) { // crossing the right border beyond the window
+            movableCharacter.x = 0;
+        } else if (movableCharacter.y <= 0) { // crossing beyond the upper boundary of the game window
+            movableCharacter.y = boardHeight - movableCharacter.height;
+        } else if (movableCharacter.y + movableCharacter.height >= boardHeight) { // crossing beyond the lower boundary of the game window
+            movableCharacter.y = 0;
+        }
+    }
+
     /**
      * This function will detect collision between all characters inside the game.
      * A specific formula will be used to detect the collision between two rectangles on the screen.
@@ -398,7 +410,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
      * @param b the second 'Block' character object
      * @return the boolean result of the collision detection between the two 'Block' characters
      */
-    public boolean collision(Block a, Block b) {
+    private boolean collision(Block a, Block b) {
         // the collision detection formula:
         return a.x < b.x + b.width &&
                 a.x + a.width > b.x &&
@@ -406,7 +418,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                 a.y + a.height > b.y;
     }
 
-    public void resetPositions() {
+    private void resetPositions() {
         pacman.reset();
 
         /*
@@ -457,36 +469,13 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
     /**
      * Will listen and process the action for a key being pressed and held in the pressed position.
-     * (We are not interested in listening to a key press. The main change in the position of 'Pacman'
-     * will happen when an arrow key is released after being pressed)
+     * When an arrow key is pressed, the pacman starts moving. We will also use this function to update
+     * the direction, velocity and directional image of 'Pacman' in the game window
      *
      * @param e the event to be processed
      */
     @Override
     public void keyPressed(KeyEvent e) {
-    }
-
-    /**
-     * We will use this function to update the direction, velocity and directional image
-     * of 'Pacman' in the game window
-     *
-     * @param e the event to be processed
-     */
-    @Override
-    public void keyReleased(KeyEvent e) {
-        // the key codes for the arrow keys are between 37 and 40 (inclusive)
-//        System.out.println(e.getExtendedKeyCode());
-
-        if (gameOver && e.getKeyCode() == KeyEvent.VK_SPACE) {
-            loadMap(); // reload the default tile map (along-with all 'eaten' food tiles)
-            resetPositions(); // resets the positions of ghosts and pacman
-            lives = 3;
-            score = 0;
-            gameOver = false;
-            gameLoopTimer.start();
-            return; // to break out of this function after game restart, and skip the switch blocks below
-        }
-
         switch (e.getKeyCode()) {
             case KeyEvent.VK_UP -> pacman.updateDirection('U');
             case KeyEvent.VK_DOWN -> pacman.updateDirection('D');
@@ -504,5 +493,34 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         The pacman image change is not being done with the arrow-key press, because an arrow-key press does not result
         in a direction change if the arrow-key direction is blocked by a wall.
          */
+    }
+
+    /**
+     * The pacman will stop moving when an already pressed arrow key is released. Also, we will restart the
+     * game in this window based on the 'space' key being released on the keyboard, and the 'gameOver'
+     * condition being true.
+     *
+     * @param e the event to be processed
+     */
+    @Override
+    public void keyReleased(KeyEvent e) {
+        // the key codes for the arrow keys are between 37 and 40 (inclusive)
+//        System.out.println(e.getExtendedKeyCode());
+        // stopping the movement of the pacman when an arrow key is released
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT -> {
+                pacman.velocityX = 0;
+                pacman.velocityY = 0;
+            }
+        }
+
+        if (gameOver && e.getKeyCode() == KeyEvent.VK_SPACE) {
+            loadMap(); // reload the default tile map (along-with all 'eaten' food tiles)
+            resetPositions(); // resets the positions of ghosts and pacman
+            lives = 3;
+            score = 0;
+            gameOver = false;
+            gameLoopTimer.start();
+        }
     }
 }
