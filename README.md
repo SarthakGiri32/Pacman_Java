@@ -22,8 +22,8 @@ on your PC before cloning this repo**
 \(see [CHANGELOG](CHANGELOG) for specific feature implementation dates\)  
 
 ### 1. Main Features:
-- [ ] A loop around feature for the pacman character (partially completed):  
-  - [ ] If the pacman goes beyond the up/down/left/right border of the game window, it should loop around to the 
+- [x] A loop around feature for the pacman character (partially completed):  
+  - [x] If the pacman goes beyond the up/down/left/right border of the game window, it should loop around to the 
         opposite side and keep moving in the same direction
   - [x] implement a left/right looping for the 9th row of the map, based on the tutorial tilemap
 - [ ] A pause/start feature, based on pressing a key on the keyboard to start/stop the game

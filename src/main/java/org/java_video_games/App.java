@@ -2,7 +2,7 @@ package org.java_video_games;
 
 import javax.swing.JFrame;
 
-public class App {
+public class App extends PacMan {
     public static void main(String[] args) {
         JFrame gameWIndowJFrame = getGameWIndowJFrame();
 
