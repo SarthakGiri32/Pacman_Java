@@ -28,7 +28,7 @@ on your PC before cloning this repo**
   - [x] implement a left/right looping for the 9th row of the map, based on the tutorial tilemap
   - [x] Also added this feature for all ghost characters
 - [x] A pause/start feature, based on pressing a key on the keyboard to start/stop the game
-- [ ] A high-score tracker, which keeps a track of the highest score ever achieved in the game across all game 
+- [x] A high-score tracker, which keeps a track of the highest score ever achieved in the game across all game 
       restarts  
 
 ### 2. Other Features:  
