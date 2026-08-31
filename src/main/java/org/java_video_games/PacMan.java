@@ -91,7 +91,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
     // variables explained in "App" class
     // This JPanel will have the same size as the JFrame main game window
-    private final int rowCount = 21;
+    private final int rowCount = 22;
     private final int columnCount = 19;
     private final int tileSize = 32;
     private final int boardWidth = columnCount * tileSize;
@@ -111,6 +111,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     //X = wall, O = skip, P = pac man, ' ' = food
     //Ghosts: b = blue, o = orange, p = pink, r = red
     private final String[] tileMap = {
+            "OOOOOOOOOOOOOOOOOOO",
             "XXXXXXXXXXXXXXXXXXX",
             "X        X        X",
             "X XX XXX X XXX XX X",
@@ -155,6 +156,14 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     Pacman has 3 lives (by default). If pacman collides with a ghost, it will lose 1 life. If pacman loses all 3 lives,
     'gameOver' is set to true. If 'gameOver' is true, the player is unable to move pacman.
      */
+
+    private int level = 1; // variable to track the level
+    private boolean isGamePaused = false; // boolean variable to keep track of the game's paused/resumed state
+
+    /*
+    keeps track of the highest score ever achieved in the game across all game restarts after game-overs
+     */
+    private int allTimeHighScore = 0;
 
     protected PacMan() {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
@@ -292,10 +301,13 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         // score/'game over' display
         g.setFont(new Font("Arial", Font.PLAIN, 18));
         if (gameOver) {
-            g.drawString("Game Over! Final Score: " + score + " (Press 'Space' to play again)",
-                    tileSize / 2, tileSize / 2);
+            g.drawString("Game Over! Final Score: " + score + " Final Level: " + level + " All-Time High Score: "
+                    + allTimeHighScore, tileSize / 4, tileSize / 2);
+            g.drawString("Press 'Space' to play again", tileSize / 4, tileSize + 1);
         } else {
-            g.drawString("x" + lives + " Score: " + score, tileSize / 2, tileSize / 2);
+            g.drawString("x" + lives + " Score: " + score + " Level: " + level + " All-Time High Score: "
+                    + allTimeHighScore, tileSize / 4, tileSize / 2);
+            g.drawString("Press 'P' to pause/resume the game", tileSize / 4, tileSize + 1);
         }
     }
 
@@ -341,7 +353,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             This if case is only valid for the default tutorial tile map. if the ghost is moving left or right on the
             9th row, then either up or down will be selected as the direction for the ghost randomly
              */
-            if (ghost.y == tileSize * 9 && ghost.direction != 'U' && ghost.direction != 'D') {
+            if (ghost.y == tileSize * 10 && ghost.direction != 'U' && ghost.direction != 'D') {
                 ghost.updateDirection(directions[random.nextInt(2)]);
             }
 
@@ -356,6 +368,9 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                 if (lives == 0) {
                     // we need to stop moving the pacman and ghosts if lives == 0
                     gameOver = true;
+                    if (allTimeHighScore < score) {
+                        allTimeHighScore = score;
+                    }
                     return;
                 }
                 resetPositions();
@@ -383,6 +398,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         level's tile map is the same as the 1st level's)
          */
         if (foods.isEmpty()) {
+            level += 1;
             loadMap();
             resetPositions();
         }
@@ -481,6 +497,13 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             case KeyEvent.VK_DOWN -> pacman.updateDirection('D');
             case KeyEvent.VK_LEFT -> pacman.updateDirection('L');
             case KeyEvent.VK_RIGHT -> pacman.updateDirection('R');
+            default -> {
+                /*
+                any key pressed and held other than an arrow key is ignored by the pacman sprite image selection
+                switch case below
+                 */
+                return;
+            }
         }
 
         switch (pacman.direction) {
@@ -512,6 +535,15 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                 pacman.velocityX = 0;
                 pacman.velocityY = 0;
             }
+            case KeyEvent.VK_P -> { // game pause/resume mechanic
+                if (!isGamePaused) {
+                    isGamePaused = true;
+                    gameLoopTimer.stop();
+                } else {
+                    isGamePaused = false;
+                    gameLoopTimer.start();
+                }
+            }
         }
 
         if (gameOver && e.getKeyCode() == KeyEvent.VK_SPACE) {
@@ -519,6 +551,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             resetPositions(); // resets the positions of ghosts and pacman
             lives = 3;
             score = 0;
+            level = 1;
             gameOver = false;
             gameLoopTimer.start();
         }
