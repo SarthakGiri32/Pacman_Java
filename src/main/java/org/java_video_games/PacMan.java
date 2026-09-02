@@ -1,16 +1,101 @@
 package org.java_video_games;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.File;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
+/**
+ * This class contains all code necessary for running the PacMan video game, and to create the game window
+ */
 public class PacMan extends JPanel implements ActionListener, KeyListener {
+    /**
+     * A Data Manager class for managing the I/O from the config JSON file
+     */
+    public static class ConfigJsonDataManager {
+
+        // represents the 'config.json' file for I/O
+        private final File configJsonFile;
+        // 'ObjectMapper' object for reading and writing JSON data from the 'config.json' file
+        private final ObjectMapper configJsonObjectMapper;
+        // Instance object for the 'ConfigJsonData' class to store the JSON data
+        private final ConfigJsonData configJsonData;
+
+        public ConfigJsonDataManager(String path) throws JacksonException {
+            configJsonFile = new File(path);
+            configJsonObjectMapper = new ObjectMapper();
+            configJsonData = configJsonObjectMapper.readValue(configJsonFile, ConfigJsonData.class);
+        }
+
+        public List<String> getTileMap() {
+            return configJsonData.getTileMap();
+        }
+
+        public int getAllTimeHighScore() {
+            return configJsonData.getAllTimeHighScore();
+        }
+
+        public void updateAllTimeHighScore(int newAllTimeHighScore) {
+            if (newAllTimeHighScore > configJsonData.getAllTimeHighScore()) {
+                configJsonData.setAllTimeHighScore(newAllTimeHighScore);
+                saveToConfigJsonFile();
+            }
+        }
+
+        private void saveToConfigJsonFile() throws JacksonException {
+            configJsonObjectMapper.writerWithDefaultPrettyPrinter().writeValue(configJsonFile, configJsonData);
+        }
+
+        /**
+         * Model class for the config JSON file's data structure (will be used for the Config JSON file I/O)
+         */
+        public static class ConfigJsonData {
+            private List<String> tileMap;
+            private int allTimeHighScore;
+
+            /**
+             * Jackson needs a constructor with no arguments
+             */
+            public ConfigJsonData() {}
+
+            @JsonProperty("tileMap")
+            public List<String> getTileMap() {
+                return tileMap;
+            }
+
+            @JsonProperty("tileMap")
+            public void setTileMap(List<String> tileMap) {
+                this.tileMap = tileMap;
+            }
+
+            @JsonProperty("allTimeHighScore")
+            public int getAllTimeHighScore() {
+                return allTimeHighScore;
+            }
+
+            @JsonProperty("allTimeHighScore")
+            public void setAllTimeHighScore(int allTimeHighScore) {
+                this.allTimeHighScore = allTimeHighScore;
+            }
+        }
+    }
+
+    /**
+     * Class created for representing every single 'Block' object in the game window.
+     * (A 'Block' object is a section of the window 32px by 32px in size, and is used to represent
+     * PacMan, the ghosts, the walls, and the food items)
+     */
     public class Block {
         int x, y, width, height;
         Image image;
@@ -35,7 +120,10 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             this.startImage = image;
         }
 
-        // update direction and velocity based on the arrow key pressed
+        /**
+         * Update direction and velocity based on the arrow key pressed
+         * @param direction the updated movement direction
+         */
         protected void updateDirection(char direction) {
             char prevDirection = this.direction;
             this.direction = direction;
@@ -58,7 +146,9 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             }
         }
 
-        // update velocity based on the direction
+        /**
+         * Update velocity based on the direction
+         */
         private void updateVelocity() {
             // we are moving by 8px in every frame
             switch (this.direction) {
@@ -81,7 +171,9 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             }
         }
 
-        // resets the x and y positions of pacman and ghosts after a collision
+        /**
+         * Resets the x and y positions of pacman and ghosts after a collision
+         */
         protected void reset() {
             this.x = this.startX;
             this.y = this.startY;
@@ -110,30 +202,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
     //X = wall, O = skip, P = pac man, ' ' = food
     //Ghosts: b = blue, o = orange, p = pink, r = red
-    private final String[] tileMap = {
-            "OOOOOOOOOOOOOOOOOOO",
-            "XXXXXXXXXXXXXXXXXXX",
-            "X        X        X",
-            "X XX XXX X XXX XX X",
-            "X                 X",
-            "X XX X XXXXX X XX X",
-            "X    X       X    X",
-            "XXXX XXXX XXXX XXXX",
-            "OOOX X       X XOOO",
-            "XXXX X XXrXX X XXXX",
-            "O       bpo       O",
-            "XXXX X XXXXX X XXXX",
-            "OOOX X       X XOOO",
-            "XXXX X XXXXX X XXXX",
-            "X        X        X",
-            "X XX XXX X XXX XX X",
-            "X  X     P     X  X",
-            "XX X X XXXXX X X XX",
-            "X    X   X   X    X",
-            "X XXXXXX X XXXXXX X",
-            "X                 X",
-            "XXXXXXXXXXXXXXXXXXX"
-    };
+    private final String[] tileMap = new String[22];
 
     private HashSet<Block> walls, foods, ghosts; // will be used for calculating and dealing with collisions
     private Block pacman;
@@ -165,6 +234,18 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
      */
     private int allTimeHighScore = 0;
 
+    // creating a 'ConfigJsonDataManager' object to manage the I/O from the 'config.json' file
+    private final ConfigJsonDataManager configJsonDataManager;
+
+    /**
+     * The constructor for the pacman class is being used to:<br>
+     * 1. Set the game window 'JPanel' configurations<br>
+     * 2. Add a 'KeyListener' to listen for the key interactions from the keyboard<br>
+     * 3. Set the 'Image' type variables for the walls, ghosts and PacMan<br>
+     * 4. Read the Tile Map array from a JSON file, and load the Tile Map's images into the code memory<br>
+     * 5. Set the initial directions for the ghosts<br>
+     * 6. Initialize and start the 'gameLoopTimer' variable
+     */
     protected PacMan() {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
         setBackground(Color.BLACK);
@@ -199,7 +280,13 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         pacmanRightImage = new ImageIcon(Objects.requireNonNull(getClass().getResource(
                 "/Game_Images/pacmanRight.png"))).getImage();
 
-        // loading the tile map image objects in the object hash sets
+        /*
+        Creating an instance object of the 'ConfigJsonDataManager' class to read and write the 'config.json' file
+        data, and calling the function to read and store the data for the tile map and the all-time-high-score
+         */
+        configJsonDataManager = new ConfigJsonDataManager("src/main/resources/Game_Data/Config.json");
+        readConfigJsonFileData();
+
         loadMap();
 
         for (Block ghost : ghosts) {
@@ -218,6 +305,9 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         gameLoopTimer.start();
     }
 
+    /**
+     * Loading the tile map image objects in the object hash sets
+     */
     private void loadMap() {
         // initializing the hashsets
         walls = new HashSet<>();
@@ -276,12 +366,35 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
     }
 
+    /**
+     * Used to read the tile map array and the all-time-high-score value from the 'config.json' file
+     */
+    private void readConfigJsonFileData() {
+        // reading the tile map as a 'List<String>' list, and converting to a 'String[]' type array
+        List<String> tileMapAsList = configJsonDataManager.getTileMap();
+        if (tileMap.length == tileMapAsList.size()) {
+            for (int i = 0; i < tileMap.length; i++) {
+                tileMap[i] = tileMapAsList.get(i);
+            }
+        } else {
+            throw new RuntimeException("The 'tileMap' array in the 'config.json' file has less than " +
+                    tileMap.length + " rows");
+        }
+
+        // reading the all-time-high-score
+        allTimeHighScore = configJsonDataManager.getAllTimeHighScore();
+    }
+
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         draw(g);
     }
 
-    // creating the graphics for the game window using the 32px by 32px images and the tile map
+    /**
+     * Displaying 2D graphics on the game window using the 32px by 32px images and the tile map.
+     * Also, displaying the current level, lives left, all-time-high-score and 'Game Over' messages
+     * @param g mentioned in the 'paintComponent' function's documentation (the calling function)
+     */
     private void draw(Graphics g) {
         g.drawImage(pacman.image, pacman.x, pacman.y, pacman.width, pacman.height, null);
 
@@ -301,17 +414,24 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         // score/'game over' display
         g.setFont(new Font("Arial", Font.PLAIN, 18));
         if (gameOver) {
-            g.drawString("Game Over! Final Score: " + score + " Final Level: " + level + " All-Time High Score: "
-                    + allTimeHighScore, tileSize / 4, tileSize / 2);
-            g.drawString("Press 'Space' to play again", tileSize / 4, tileSize + 1);
+            g.drawString("Game Over! | Final Score: " + score + " | Final Level: " + level,
+                    tileSize / 4, tileSize / 2);
+            g.drawString("All-Time High Score: " + allTimeHighScore + " | Press 'Space' to play again",
+                    tileSize / 4, tileSize + 1);
         } else {
-            g.drawString("x" + lives + " Score: " + score + " Level: " + level + " All-Time High Score: "
+            g.drawString("x" + lives + " | Score: " + score + " | Level: " + level + " | All-Time High Score: "
                     + allTimeHighScore, tileSize / 4, tileSize / 2);
             g.drawString("Press 'P' to pause/resume the game", tileSize / 4, tileSize + 1);
         }
     }
 
-    // the position of the characters is changed based on the velocity and direction of the velocity
+    /**
+     * This function accomplishes the following tasks:<br>
+     * 1. Executes the movement mechanics for PacMan and the ghosts<br>
+     * 2. Executes the collision mechanic between PacMan and the walls, and ghosts and the walls<br>
+     * 3. Executes the 'Game Over' mechanic through the available lives for PacMan<br>
+     * 4. Executes a scoring and level-up mechanic based on PacMan's food item consumption
+     */
     private void move() {
         pacman.x += pacman.velocityX;
         pacman.y += pacman.velocityY;
@@ -368,8 +488,12 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                 if (lives == 0) {
                     // we need to stop moving the pacman and ghosts if lives == 0
                     gameOver = true;
-                    if (allTimeHighScore < score) {
+                    // used to update the all-time-high-score data across all game starts and re-starts
+                    if (score > allTimeHighScore) {
                         allTimeHighScore = score;
+                        if (allTimeHighScore > configJsonDataManager.getAllTimeHighScore()) {
+                            configJsonDataManager.updateAllTimeHighScore(allTimeHighScore);
+                        }
                     }
                     return;
                 }
@@ -404,7 +528,10 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
     }
 
-    // handles beyond game window boundary movement for pacman and ghosts
+    /**
+     * Handles the 'beyond the game window boundary' movement for PacMan and ghosts
+     * @param movableCharacter 'Block' type variable (either PacMan or the ghosts)
+     */
     private void beyondBoundaryMoveLoop(Block movableCharacter) {
         if (movableCharacter.x <= 0) { // crossing the left border beyond the game window
             movableCharacter.x = boardWidth - movableCharacter.width;
@@ -434,6 +561,13 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                 a.y + a.height > b.y;
     }
 
+    /**
+     * This function does the following tasks:<br>
+     * 1. Resets the positions of the PacMan and ghosts<br>
+     * 2. Stops PacMan from moving<br>
+     * 3. Sets a new direction and velocity from the
+     * ghost's initial starting position (based on the tile map)
+     */
     private void resetPositions() {
         pacman.reset();
 
@@ -456,7 +590,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     }
 
     /**
-     * the positions of all movable characters is updated before the screen is repainted for every frame in
+     * The positions of all movable characters is updated before the screen is repainted for every frame in
      * the game loop
      *
      * @param e the event to be processed
@@ -474,7 +608,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
     /**
      * Will listen and process the values from a keyboard key with a character (alphanumeric
-     * or special characters). (We are only using arrow keys to move the 'Pacman' around,
+     * or special characters). (We are only using arrow keys to move the 'PacMan' around, and
      * we don't need the values from any character keys)
      *
      * @param e the event to be processed
@@ -520,8 +654,8 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
     /**
      * The pacman will stop moving when an already pressed arrow key is released. Also, we will restart the
-     * game in this window based on the 'space' key being released on the keyboard, and the 'gameOver'
-     * condition being true.
+     * game in this function based on the 'gameOver' condition being true, and the 'space' key
+     * being released on the keyboard
      *
      * @param e the event to be processed
      */
@@ -547,6 +681,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
 
         if (gameOver && e.getKeyCode() == KeyEvent.VK_SPACE) {
+            readConfigJsonFileData(); // only necessary to update the 'allTimeHighScore' variable
             loadMap(); // reload the default tile map (along-with all 'eaten' food tiles)
             resetPositions(); // resets the positions of ghosts and pacman
             lives = 3;

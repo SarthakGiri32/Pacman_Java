@@ -2,6 +2,10 @@ package org.java_video_games;
 
 import javax.swing.JFrame;
 
+/**
+ * Initializing the game window 'JFrame' to contain the PacMan 'JPanel' object, and set the window size
+ * and screen-location of the game window
+ */
 public class App extends PacMan {
     public static void main(String[] args) {
         JFrame gameWIndowJFrame = getGameWIndowJFrame();
