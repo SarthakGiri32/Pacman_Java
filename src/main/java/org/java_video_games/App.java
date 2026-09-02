@@ -2,6 +2,10 @@ package org.java_video_games;
 
 import javax.swing.JFrame;
 
+/**
+ * Initializing the game window 'JFrame' to contain the PacMan 'JPanel' object, and set the window size
+ * and screen-location of the game window
+ */
 public class App extends PacMan {
     public static void main(String[] args) {
         JFrame gameWIndowJFrame = getGameWIndowJFrame();
@@ -18,7 +22,7 @@ public class App extends PacMan {
 
     private static JFrame getGameWIndowJFrame() {
         // the number of tiles in the rows and columns of the main game window
-        int rowCount = 21;
+        int rowCount = 22;
         int columnCount = 19;
 
         // the tile size and overall game window dimensions

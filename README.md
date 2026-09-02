@@ -12,10 +12,10 @@ on your PC before cloning this repo**
 - Each tile has a width of 32px and a height of 32px  
 - In terms of the tiles:  
   - The number of columns is 19 (indexed 0 to 18)  
-  - The number of rows is 21 (indexed 0 to 20)  
+  - The number of rows is 22 (indexed 0 to 21) (Accounting for the score and level display section)  
 - So, the size of the game window is:  
   - Width: 19 * 32px  
-  - Height: 21 * 32px  
+  - Height: 22 * 32px  
 
 ## Features to add:  
 
@@ -24,12 +24,14 @@ on your PC before cloning this repo**
 ### 1. Main Features:
 - [x] A loop around feature for the pacman character (partially completed):  
   - [x] If the pacman goes beyond the up/down/left/right border of the game window, it should loop around to the 
-        opposite side and keep moving in the same direction
+  opposite side and keep moving in the same direction
   - [x] implement a left/right looping for the 9th row of the map, based on the tutorial tilemap
   - [x] Also added this feature for all ghost characters
-- [ ] A pause/start feature, based on pressing a key on the keyboard to start/stop the game
-- [ ] A high-score tracker, which keeps a track of the highest score ever achieved in the game across all game 
-      restarts  
+- [x] A pause/start feature, based on pressing a key on the keyboard to start/stop the game
+- [x] A high-score tracker, which keeps a track of the highest score ever achieved in the game across all game 
+      restarts after game-overs
+  - [x] Also implemented this across all game starts, so that any user can keep track of the all-time high score
+  across all game starts and re-starts
 
 ### 2. Other Features:  
 - A 'power-pellet' boost:

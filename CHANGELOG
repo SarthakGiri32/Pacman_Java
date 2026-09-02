@@ -1,3 +1,18 @@
+Date: 1 Sep 2026 - 2 Sep 2026
+- Removed the 'tileMap' initialization from in-code to a JSON file (using the Jackson JSON library for JSON I/O)
+- Tracking the All-Time High Score across all game starts and re-starts
+    - Removed the 'allTimeHighScore' tracking from in-code to the same JSON file used for storing the 'tileMap' array
+    - reading and updating the All-Time High Score from that JSON file
+- Fixed the documentation for the code, and added some finishing touches to the Game Screen
+- Completed implementation of all after-tutorial main features
+
+Date: 31 Aug 2026
+- Implemented the current game level display:
+    - Added the current level number alongside the running game score
+    - Added the final game level achieved score alongside the final game score in the 'Game Over' state
+- Implemented the 'Pause/Resume' feature
+- Completed a working example of reading "Tile Map" array and "All Time High Score" from Json using Jackson library
+
 Date: 30 Aug 2026
 - Implemented the beyond boundary wall movement loop around feature for both pacman and ghosts
 - Changed the movement mechanic for pacman to move when a arrow key is pressed, and to stop moving when the pressed
